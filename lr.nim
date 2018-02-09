@@ -40,6 +40,18 @@ for epoch in 0..n_epoch:
 #   Stochastic
     var rand = random(9999)
     var xi = zeros(2,2)
+    # var xi = matrix(@[
+    #   x.row(rand),
+    #   x.row(rand+1)
+    # ])
+    # var xi = matrix(@[
+    #   @[x[rand,0], x[rand,1]],
+    #   @[x[rand+1,0], x[rand+1,1]],
+    # ])
+    # var yi = matrix(@[
+    #   @[y[rand,0]],
+    #   @[y[rand+1,0]]
+    # ])
     xi[0,0] = x[rand, 0]
     xi[0,1] = x[rand, 1]
     xi[1,0] = x[rand+1, 0]
