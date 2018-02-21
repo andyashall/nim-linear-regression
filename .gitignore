@@ -2,3 +2,6 @@
 nimcache/
 lr
 .ipynb_checkpoints/
+*.csv
+data/
+iris
