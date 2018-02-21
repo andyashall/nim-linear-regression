@@ -1,6 +1,6 @@
 import neo
 import strutils
-from random import random, randomize
+from random import random, randomize, shuffle
 import times, os, parsecsv, streams, math
 
 # Reads csv file to matrix ("filepath", n_rows, n_cols) : how can it detect n_rows and n_cols?
@@ -21,13 +21,6 @@ proc read_csv(fn: string, rows: int, cols: int): Matrix[float64] =
   close(csv)
   return x
 
-# proc train_test_split(X: Matrix[float64], y: Matrix[float64], ts: float64): (Matrix[float64], Matrix[float64], Matrix[float64], Matrix[float64]) =
-  
-
-var train = read_csv("./data/iris_training.csv", 120, 5)
-
-var test = read_csv("./data/iris_test.csv", 30, 5)
-
 # Get the shape of a matrix
 proc shape(X: Matrix[float64]): (int, int) =
   var c = 0
@@ -37,6 +30,36 @@ proc shape(X: Matrix[float64]): (int, int) =
   for val in X.row(0):
     c+=1
   return (r, c)
+
+proc train_test_split(X: Matrix[float64], y: Matrix[float64], ts: float64, seed: int): (Matrix[float64], Matrix[float64], Matrix[float64], Matrix[float64]) =
+  # create random indicies
+  randomize(seed)
+  var (rows, cols) = shape(X)
+  var ind = newSeq[int](rows-1)
+  for i in 0..rows-2: ind[i] = i
+  shuffle(ind)
+  var train_size = int(round(float(rows) * (1-ts)))
+  var test_size = int(round(float(rows) * ts))
+  var x_train = zeros(train_size, cols)
+  var x_test = zeros(test_size, cols)
+  var y_train = zeros(train_size, 1)
+  var y_test = zeros(test_size, 1)
+  var count = 0
+  for col in 0..cols-1:
+    for row in ind:
+      if count < train_size:
+        x_train[count, col] = X[row, col]
+        y_train[count, 0] = y[row, 0]
+      else:
+        if count-train_size < test_size:
+          x_test[(count-train_size), col] = X[row, col]
+          y_test[(count-train_size), 0] = y[row, 0]
+      count+=1
+  return (x_train, x_test, y_train, y_test)
+
+var train = read_csv("./data/iris_training.csv", 120, 5)
+
+var test = read_csv("./data/iris_test.csv", 30, 5)
 
 # Drop a column from matrix
 proc drop_column(X: Matrix[float64], drop: int): Matrix[float64] =
@@ -56,6 +79,8 @@ proc get_column(X: Matrix[float64], get: int): Matrix[float64] =
 
 var y_train = get_column(train, 4)
 var x_train = drop_column(train, 4)
+
+var (xt, yt, xts, yts) = train_test_split(x_train, y_train, 0.25, 29)
 
 var y_test = get_column(test, 4)
 var x_test = drop_column(test, 4)
