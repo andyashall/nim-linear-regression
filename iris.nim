@@ -23,6 +23,7 @@ proc read_csv(fn: string, rows: int, cols: int): (Matrix[float64], Matrix[float6
       col += 1
     row += 1
   close(csv)
+  # remove return tuple to just x
   return (x, y)
 
 var (x_train, y_train) = read_csv("./data/iris_training.csv", 120, 5)
@@ -38,6 +39,18 @@ proc shape(X: Matrix[float64]): (int, int) =
   for val in X.row(0):
     c+=1
   return (r, c)
+
+# Drop a column from matrix
+proc dropCol(X: Matrix[float64], drop: int): Matrix[float64] =
+  var (rows, cols) = shape(X)
+  var nX = zeros(rows, cols-1)
+  var newCol = 0
+  for col in 0..cols-1:
+    if col != drop:
+      for row in 0..rows-1:
+        nX[row, newCol] = X[row, col]
+      newCol+=1
+  return nX
 
 # Normalize matrix columns
 proc normalize(X: Matrix[float64]): Matrix[float64] =
