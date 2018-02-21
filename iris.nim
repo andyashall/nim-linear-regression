@@ -4,9 +4,8 @@ from random import random, randomize
 import times, os, parsecsv, streams, math
 
 # Reads csv file to matrix ("filepath", n_rows, n_cols) : how can it detect n_rows and n_cols?
-proc read_csv(fn: string, rows: int, cols: int): (Matrix[float64], Matrix[float64]) =
-  var x = zeros(rows, cols-1, float64)
-  var y = zeros(rows, 1, float64)
+proc read_csv(fn: string, rows: int, cols: int): Matrix[float64] =
+  var x = zeros(rows, cols, float64)
   var s = newFileStream(fn, fmRead)
   if s == nil: quit("cannot open the file" & paramStr(1))
   var csv: CsvParser
@@ -16,19 +15,18 @@ proc read_csv(fn: string, rows: int, cols: int): (Matrix[float64], Matrix[float6
   while readRow(csv):
     col = 0
     for val in items(csv.row):
-      if col <= cols-2:
-        x[row, col] = parseFloat(val)
-      else:
-        y[row, 0] = parseFloat(val)
+      x[row, col] = parseFloat(val)
       col += 1
     row += 1
   close(csv)
-  # remove return tuple to just x
-  return (x, y)
+  return x
 
-var (x_train, y_train) = read_csv("./data/iris_training.csv", 120, 5)
+# proc train_test_split(X: Matrix[float64], y: Matrix[float64], ts: float64): (Matrix[float64], Matrix[float64], Matrix[float64], Matrix[float64]) =
+  
 
-var (x_test, y_test) = read_csv("./data/iris_test.csv", 30, 5)
+var train = read_csv("./data/iris_training.csv", 120, 5)
+
+var test = read_csv("./data/iris_test.csv", 30, 5)
 
 # Get the shape of a matrix
 proc shape(X: Matrix[float64]): (int, int) =
@@ -41,7 +39,7 @@ proc shape(X: Matrix[float64]): (int, int) =
   return (r, c)
 
 # Drop a column from matrix
-proc dropCol(X: Matrix[float64], drop: int): Matrix[float64] =
+proc drop_column(X: Matrix[float64], drop: int): Matrix[float64] =
   var (rows, cols) = shape(X)
   var nX = zeros(rows, cols-1)
   var newCol = 0
@@ -51,6 +49,16 @@ proc dropCol(X: Matrix[float64], drop: int): Matrix[float64] =
         nX[row, newCol] = X[row, col]
       newCol+=1
   return nX
+
+proc get_column(X: Matrix[float64], get: int): Matrix[float64] =
+  var (rows, cols) = shape(X)
+  return X.column(get).asMatrix(rows, 1)
+
+var y_train = get_column(train, 4)
+var x_train = drop_column(train, 4)
+
+var y_test = get_column(test, 4)
+var x_test = drop_column(test, 4)
 
 # Normalize matrix columns
 proc normalize(X: Matrix[float64]): Matrix[float64] =
@@ -62,7 +70,7 @@ proc normalize(X: Matrix[float64]): Matrix[float64] =
   return nX
 
 # Adds a column of 1s to a matrix
-proc addOnes(X: Matrix[float64]): Matrix[float64] =
+proc add_ones(X: Matrix[float64]): Matrix[float64] =
   var (rows, cols) = shape(X)
   var nX = zeros(rows, cols+1)
   for col in 0..cols:
@@ -76,7 +84,7 @@ proc addOnes(X: Matrix[float64]): Matrix[float64] =
 
 # Batch gradient descent
 proc BGD(X: Matrix[float64], y: Matrix[float64], n_iter: int, eta: float64): Matrix[float64] =
-  var nX = addOnes(normalize(X))
+  var nX = add_ones(normalize(X))
   var (rows, cols) = shape(nX)
   var theta = randomMatrix(1, cols)
   for i in 0..n_iter:
@@ -90,10 +98,10 @@ var theta = BGD(x_train, y_train, 50, 0.01)
 
 # Make predictions for X using theta
 proc predict(X: Matrix[float64], theta: Matrix[float64]): Matrix[float64] =
-  return addOnes(normalize(X)) * theta
+  return add_ones(normalize(X)) * theta
 
 # Round a column
-proc roundCol(X: Matrix[float64], col: int): Matrix[float64] =
+proc round_column(X: Matrix[float64], col: int): Matrix[float64] =
   var (rows, cols) = shape(X)
   var nX = zeros(rows, cols)
   for row in 0..rows-1:
@@ -101,7 +109,7 @@ proc roundCol(X: Matrix[float64], col: int): Matrix[float64] =
   return nX
 
 # Get predictions and round x_test
-var preds = roundCol(predict(x_test, theta), 0)
+var preds = round_column(predict(x_test, theta), 0)
 
 # Accuracy score
 proc accuracy(p: Matrix[float64], t: Matrix[float64]): float64 =

@@ -2,7 +2,7 @@
 
 - [ ] Detect CSV n rows and columns
 - [ ] And remove column header
-- [ ] Is there a way to drop a column from matrix?
+- [x] Is there a way to drop a column from matrix?
 
 ```nim
 var y = x.column(11)
