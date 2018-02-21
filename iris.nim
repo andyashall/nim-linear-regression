@@ -31,20 +31,26 @@ proc shape(X: Matrix[float64]): (int, int) =
     c+=1
   return (r, c)
 
+# Splits X and y into training and testing data : ts is test set size between 0 - 1, seed is seed for randomize
 proc train_test_split(X: Matrix[float64], y: Matrix[float64], ts: float64, seed: int): (Matrix[float64], Matrix[float64], Matrix[float64], Matrix[float64]) =
   # create random indicies
   randomize(seed)
-  var (rows, cols) = shape(X)
-  var ind = newSeq[int](rows-1)
+
+  var
+    (rows, cols) = shape(X)
+    ind = newSeq[int](rows-1)
   for i in 0..rows-2: ind[i] = i
   shuffle(ind)
-  var train_size = int(round(float(rows) * (1-ts)))
-  var test_size = int(round(float(rows) * ts))
-  var x_train = zeros(train_size, cols)
-  var x_test = zeros(test_size, cols)
-  var y_train = zeros(train_size, 1)
-  var y_test = zeros(test_size, 1)
-  var count = 0
+
+  var
+     train_size = int(round(float(rows) * (1-ts)))
+     test_size = int(round(float(rows) * ts))
+     x_train = zeros(train_size, cols)
+     x_test = zeros(test_size, cols)
+     y_train = zeros(train_size, 1)
+     y_test = zeros(test_size, 1)
+     count = 0
+
   for col in 0..cols-1:
     for row in ind:
       if count < train_size:
@@ -55,6 +61,7 @@ proc train_test_split(X: Matrix[float64], y: Matrix[float64], ts: float64, seed:
           x_test[(count-train_size), col] = X[row, col]
           y_test[(count-train_size), 0] = y[row, 0]
       count+=1
+      
   return (x_train, x_test, y_train, y_test)
 
 var train = read_csv("./data/iris_training.csv", 120, 5)

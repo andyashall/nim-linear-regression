@@ -22,5 +22,5 @@ x = dropCol(x, 11)
 
 ```
 
-- [ ] Add a train test split function
+- [x] Add a train test split function
 - [ ] Optimize and clean up code
