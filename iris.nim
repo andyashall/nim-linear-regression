@@ -101,7 +101,7 @@ var x = drop_column(train, 4)
 
 var (x_train, x_test, y_train, y_test) = train_test_split(x, y, 0.5, 29)
 
-echo y[0..10, 0..0]
+# echo y[0..10, 0..0]
 
 # Normalize matrix columns
 proc normalize(X: Matrix[float64]): Matrix[float64] =
@@ -135,9 +135,11 @@ proc BGD(X: Matrix[float64], y: Matrix[float64], n_iter: int, eta: float64): Mat
     theta = randomMatrix(1, cols)
   for i in 0..n_iter:
     for c in 0..cols-1:
-      var grad = ((nX * theta.t) - y).t * nX.column(c).asMatrix(rows, 1)
-      theta[0,c] = theta[0,c] - eta * grad[0, 0]
+      var grad = ((nX * theta.t) - y).t * nX[0..rows-1, c..c]
+      theta[0, c] = theta[0, c] - eta * grad[0, 0]
   return theta.t
+
+# for i in countup(0, 150-10, 10): echo i
 
 # Mini-Batch gradient descent
 proc MBGD(X: Matrix[float64], y: Matrix[float64], n_epoch: int, eta: float64, batch_size: int): Matrix[float64] =
@@ -146,19 +148,18 @@ proc MBGD(X: Matrix[float64], y: Matrix[float64], n_epoch: int, eta: float64, ba
     (rows, cols) = shape(nX)
     theta = randomMatrix(1, cols)
   for epoch in 0..n_epoch:
-    for i in countup(0, rows-1, batch_size):
-      echo i
+    for i in countup(0, rows-batch_size, batch_size):
       for c in 0..cols-1:
         var
           ind = permutation(rows-1, 29)
-          xi = X[i..i+batch_size, 0..cols-1]
-          yi = y[i..i+batch_size, 0..0]
-          grad = ((xi * theta.t) - yi).t * xi.column(c).asMatrix(rows, 1)
-        theta[0,c] = theta[0,c] - eta * grad[0, 0]
+          xi = nX[i..i+batch_size-1, 0..cols-1]
+          yi = y[i..i+batch_size-1, 0..0]
+          grad = ((xi * theta.t) - yi).t * xi[0..batch_size-1, c..c]
+        theta[0, c] = theta[0, c] - eta * grad[0, 0]
   return theta.t
 
 # Get the theta for x_train
-var theta = MBGD(x_train, y_train, 50, 0.01, 10)
+var theta = MBGD(x_train, y_train, 100, 0.01, 36)
 
 # Make predictions for X using theta
 proc predict(X: Matrix[float64], theta: Matrix[float64]): Matrix[float64] =
