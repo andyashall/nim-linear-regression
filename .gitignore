@@ -3,6 +3,7 @@ nimcache/
 lr
 .ipynb_checkpoints/
 *.csv
-data/
 iris
+boston
 !data/iris.csv
+!data/boston.csv

@@ -1,12 +1,7 @@
 import neo
 import strutils
 from random import random, randomize, shuffle
-import times, os, parsecsv, streams, math
-# import sknim
-
-var encoding = {0: "Iris-setosa", 1: "Iris-versicolor", 2: "Iris-virginica"}
-
-var columns = {0: "SepalLengthCm", 1: "SepalWidthCm", 2: "PetalLengthCm", 3: "PetalWidthCm", 4: "Species"}
+import os, parsecsv, streams, math
 
 # Reads csv file to matrix ("filepath", n_rows, n_cols) : how can it detect n_rows and n_cols?
 proc read_csv(fn: string, rows: int, cols: int): Matrix[float64] =
@@ -77,9 +72,7 @@ proc train_test_split(X: Matrix[float64], y: Matrix[float64], ts: float64, seed:
 
   return (x_train, x_test, y_train, y_test)
 
-var train = read_csv("./data/iris.csv", 150, 5)
-
-# Drop a column from matrix
+  # Drop a column from matrix
 proc drop_column(X: Matrix[float64], drop: int): Matrix[float64] =
   var
     (rows, cols) = shape(X)
@@ -95,14 +88,7 @@ proc drop_column(X: Matrix[float64], drop: int): Matrix[float64] =
 # Return column n from matrix as (r, 1) matrix
 proc get_column(X: Matrix[float64], get: int): Matrix[float64] =
   var (rows, cols) = shape(X)
-  return X[0..rows-1, get..get]
-
-var y = get_column(train, 4)
-var x = drop_column(train, 4)
-
-var (x_train, x_test, y_train, y_test) = train_test_split(x, y, 0.5, 92)
-
-# echo y[0..10, 0..0]
+  return X.column(get).asMatrix(rows, 1)
 
 # Normalize matrix columns
 proc normalize(X: Matrix[float64]): Matrix[float64] =
@@ -175,9 +161,6 @@ proc MBGD(X: Matrix[float64], y: Matrix[float64], n_epoch: int, eta: float64, ba
         theta[0, c] = theta[0, c] - eta * grad[0, 0]
   return theta.t
 
-# Get the theta for x_train
-var theta = MBGD(x_train, y_train, 50, 0.01, 36)
-
 # Make predictions for X using theta
 proc predict(X: Matrix[float64], theta: Matrix[float64]): Matrix[float64] =
   return add_ones(normalize(X)) * theta
@@ -191,9 +174,6 @@ proc round_column(X: Matrix[float64], col: int): Matrix[float64] =
     nX[row, col] = round(X[row, col])
   return nX
 
-# Get predictions and round x_test
-var preds = round_column(predict(x_test, theta), 0)
-
 # Accuracy score
 proc accuracy_score(p: Matrix[float64], t: Matrix[float64]): float64 =
   var
@@ -203,4 +183,28 @@ proc accuracy_score(p: Matrix[float64], t: Matrix[float64]): float64 =
     if p[row, 0] == t[row, 0]: c+=1
   return c / rows
 
-echo "Acc: ", accuracy_score(preds, y_test)
+proc average(y: Matrix[float64]): float64 =
+  var 
+    (rows, cols) = shape(y)
+    sum = 0.0
+  for i in 0..rows-1: sum+=y[i,0]
+  return sum / float(rows)
+
+# explained_variance_score
+proc explained_variance_score(p: Matrix[float64], t: Matrix[float64]): float64 =
+  var
+    diff_avg = average(t - p)
+    true_avg = average(t)
+    numer = t - p
+    denom = t
+    c = 0
+  for i in numer:
+    numer[c, 0] = pow(i - diff_avg, 2)
+    denom[c, 0] = pow(denom[c, 0] - true_avg, 2)
+    c+=1
+  var
+    numerator = average(numer)
+    demoni = average(denom)
+  return 1 - (numerator / demoni)
+
+export read_csv, shape, permutation, train_test_split, drop_column, get_column, normalize, add_ones, BGD, SGD, MBGD, predict, round_column, accuracy_score, average, explained_variance_score
