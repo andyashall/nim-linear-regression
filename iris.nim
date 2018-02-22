@@ -99,7 +99,7 @@ proc get_column(X: Matrix[float64], get: int): Matrix[float64] =
 var y = get_column(train, 4)
 var x = drop_column(train, 4)
 
-var (x_train, x_test, y_train, y_test) = train_test_split(x, y, 0.5, 29)
+var (x_train, x_test, y_train, y_test) = train_test_split(x, y, 0.5, 92)
 
 # echo y[0..10, 0..0]
 
@@ -139,7 +139,23 @@ proc BGD(X: Matrix[float64], y: Matrix[float64], n_iter: int, eta: float64): Mat
       theta[0, c] = theta[0, c] - eta * grad[0, 0]
   return theta.t
 
-# for i in countup(0, 150-10, 10): echo i
+# Stochastic gradient descent
+proc SGD(X: Matrix[float64], y: Matrix[float64], n_epoch: int, eta: float64): Matrix[float64] =
+  var
+    nX = add_ones(normalize(X))
+    (rows, cols) = shape(nX)
+    theta = randomMatrix(1, cols)
+  for epoch in 0..n_epoch:
+    for r in 0..rows-1:
+      for c in 0..cols-1:
+        randomize()
+        var
+          i = random(rows-1)
+          xi = nX[i..i, 0..cols-1]
+          yi = y[i..i, 0..0]
+          grad = ((xi * theta.t) - yi).t * xi[0..0, c..c]
+        theta[0, c] = theta[0, c] - eta * grad[0, 0]
+  return theta.t
 
 # Mini-Batch gradient descent
 proc MBGD(X: Matrix[float64], y: Matrix[float64], n_epoch: int, eta: float64, batch_size: int): Matrix[float64] =
@@ -159,7 +175,7 @@ proc MBGD(X: Matrix[float64], y: Matrix[float64], n_epoch: int, eta: float64, ba
   return theta.t
 
 # Get the theta for x_train
-var theta = MBGD(x_train, y_train, 100, 0.01, 36)
+var theta = MBGD(x_train, y_train, 50, 0.01, 36)
 
 # Make predictions for X using theta
 proc predict(X: Matrix[float64], theta: Matrix[float64]): Matrix[float64] =
