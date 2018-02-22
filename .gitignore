@@ -4,5 +4,5 @@ lr
 .ipynb_checkpoints/
 *.csv
 data/
-!data/iris.csv
 iris
+!data/iris.csv
