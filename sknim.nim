@@ -4,9 +4,9 @@ from random import random, randomize, shuffle
 import os, parsecsv, streams, math
 
 # Reads csv file to matrix ("filepath", n_rows, n_cols) : how can it detect n_rows and n_cols?
-proc read_csv(fn: string, rows: int, cols: int): Matrix[float64] =
+proc read_csv(fn: string, rows: int, cols: int): Matrix[float] =
   var
-    x = zeros(rows, cols, float64)
+    x = zeros(rows, cols, float)
     s = newFileStream(fn, fmRead)
   if s == nil: quit("cannot open the file" & paramStr(1))
   var csv: CsvParser
@@ -24,7 +24,7 @@ proc read_csv(fn: string, rows: int, cols: int): Matrix[float64] =
   return x
 
 # Get the shape of a matrix
-proc shape(X: Matrix[float64]): (int, int) =
+proc shape(X: Matrix[float]): (int, int) =
   var 
     c = 0
     r = 0
@@ -43,7 +43,7 @@ proc permutation(n: int, seed: int): seq[int] =
   return arr
 
 # Splits X and y into training and testing data : ts is test set size between 0 - 1, seed is seed for randomize
-proc train_test_split(X: Matrix[float64], y: Matrix[float64], ts: float64, seed: int): (Matrix[float64], Matrix[float64], Matrix[float64], Matrix[float64]) =
+proc train_test_split(X: Matrix[float], y: Matrix[float], ts: float, seed: int): (Matrix[float], Matrix[float], Matrix[float], Matrix[float]) =
 
   var
     (rows, cols) = shape(X)
@@ -73,7 +73,7 @@ proc train_test_split(X: Matrix[float64], y: Matrix[float64], ts: float64, seed:
   return (x_train, x_test, y_train, y_test)
 
   # Drop a column from matrix
-proc drop_column(X: Matrix[float64], drop: int): Matrix[float64] =
+proc drop_column(X: Matrix[float], drop: int): Matrix[float] =
   var
     (rows, cols) = shape(X)
     nX = zeros(rows, cols-1)
@@ -86,12 +86,12 @@ proc drop_column(X: Matrix[float64], drop: int): Matrix[float64] =
   return nX
 
 # Return column n from matrix as (r, 1) matrix
-proc get_column(X: Matrix[float64], get: int): Matrix[float64] =
+proc get_column(X: Matrix[float], get: int): Matrix[float] =
   var (rows, cols) = shape(X)
   return X.column(get).asMatrix(rows, 1)
 
 # Normalize matrix columns
-proc normalize(X: Matrix[float64]): Matrix[float64] =
+proc normalize(X: Matrix[float]): Matrix[float] =
   var
     (rows, cols) = shape(X)
     nX = zeros(rows, cols)
@@ -101,7 +101,7 @@ proc normalize(X: Matrix[float64]): Matrix[float64] =
   return nX
 
 # Adds a column of 1s to a matrix
-proc add_ones(X: Matrix[float64]): Matrix[float64] =
+proc add_ones(X: Matrix[float]): Matrix[float] =
   var
     (rows, cols) = shape(X)
     nX = zeros(rows, cols+1)
@@ -115,7 +115,7 @@ proc add_ones(X: Matrix[float64]): Matrix[float64] =
   return nX
 
 # Batch gradient descent
-proc BGD(X: Matrix[float64], y: Matrix[float64], n_iter: int, eta: float64): Matrix[float64] =
+proc BGD(X: Matrix[float], y: Matrix[float], n_iter: int, eta: float): Matrix[float] =
   var
     nX = add_ones(normalize(X))
     (rows, cols) = shape(nX)
@@ -127,7 +127,7 @@ proc BGD(X: Matrix[float64], y: Matrix[float64], n_iter: int, eta: float64): Mat
   return theta.t
 
 # Stochastic gradient descent
-proc SGD(X: Matrix[float64], y: Matrix[float64], n_epoch: int, eta: float64): Matrix[float64] =
+proc SGD(X: Matrix[float], y: Matrix[float], n_epoch: int, eta: float): Matrix[float] =
   var
     nX = add_ones(normalize(X))
     (rows, cols) = shape(nX)
@@ -145,7 +145,7 @@ proc SGD(X: Matrix[float64], y: Matrix[float64], n_epoch: int, eta: float64): Ma
   return theta.t
 
 # Mini-Batch gradient descent
-proc MBGD(X: Matrix[float64], y: Matrix[float64], n_epoch: int, eta: float64, batch_size: int): Matrix[float64] =
+proc MBGD(X: Matrix[float], y: Matrix[float], n_epoch: int, eta: float, batch_size: int): Matrix[float] =
   var
     nX = add_ones(normalize(X))
     (rows, cols) = shape(nX)
@@ -162,11 +162,11 @@ proc MBGD(X: Matrix[float64], y: Matrix[float64], n_epoch: int, eta: float64, ba
   return theta.t
 
 # Make predictions for X using theta
-proc predict(X: Matrix[float64], theta: Matrix[float64]): Matrix[float64] =
+proc predict(X: Matrix[float], theta: Matrix[float]): Matrix[float] =
   return add_ones(normalize(X)) * theta
 
 # Round a column
-proc round_column(X: Matrix[float64], col: int): Matrix[float64] =
+proc round_column(X: Matrix[float], col: int): Matrix[float] =
   var
     (rows, cols) = shape(X)
     nX = zeros(rows, cols)
@@ -175,7 +175,7 @@ proc round_column(X: Matrix[float64], col: int): Matrix[float64] =
   return nX
 
 # Accuracy score
-proc accuracy_score(p: Matrix[float64], t: Matrix[float64]): float64 =
+proc accuracy_score(p: Matrix[float], t: Matrix[float]): float =
   var
     (rows, cols) = shape(p)
     c = 0
@@ -183,7 +183,7 @@ proc accuracy_score(p: Matrix[float64], t: Matrix[float64]): float64 =
     if p[row, 0] == t[row, 0]: c+=1
   return c / rows
 
-proc average(y: Matrix[float64]): float64 =
+proc average(y: Matrix[float]): float =
   var 
     (rows, cols) = shape(y)
     sum = 0.0
@@ -191,7 +191,7 @@ proc average(y: Matrix[float64]): float64 =
   return sum / float(rows)
 
 # explained_variance_score
-proc explained_variance_score(p: Matrix[float64], t: Matrix[float64]): float64 =
+proc explained_variance_score(p: Matrix[float], t: Matrix[float]): float =
   var
     diff_avg = average(t - p)
     true_avg = average(t)
